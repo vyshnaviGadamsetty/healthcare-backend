@@ -14,6 +14,49 @@ function logout() {
 }
 
 // ============================
+// 🩺 Update Patient Symptoms (GLOBAL — called from HTML onclick)
+// ============================
+async function updateSymptoms(patientId) {
+  const newSymptoms = document.getElementById("update-symptoms").value.trim();
+  if (!newSymptoms) {
+    alert("⚠️ Please enter new symptoms before updating.");
+    return;
+  }
+
+  const patientRes = await fetch(`${API_BASE}/patients/${patientId}/`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!patientRes.ok) {
+    alert("❌ Failed to fetch patient data.");
+    return;
+  }
+
+  const patientData = await patientRes.json();
+
+  const updateRes = await fetch(`${API_BASE}/patients/${patientId}/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      name: patientData.name,
+      age: patientData.age,
+      disease: newSymptoms
+    })
+  });
+
+  if (updateRes.ok) {
+    alert("✅ Symptoms updated successfully.");
+    document.getElementById("update-symptoms").value = "";
+    loadPatientDashboard();
+  } else {
+    alert("❌ Failed to update symptoms.");
+    console.error("Update error:", await updateRes.text());
+  }
+}
+// ============================
 // 🔐 LOGIN
 // ============================
 const loginForm = document.getElementById("login-form");
@@ -52,6 +95,7 @@ if (loginForm) {
   });
 }
 
+
 // ============================
 // 🧑 REGISTER
 // ============================
@@ -86,35 +130,6 @@ if (registerForm) {
   });
 }
 
-
-
-// ============================
-// ➕ Add Doctor
-// ============================
-const addDoctorForm = document.getElementById("add-doctor-form");
-if (addDoctorForm) {
-  addDoctorForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("doctor-name").value;
-    const specialization = document.getElementById("doctor-specialization").value;
-
-    const res = await fetch(`${API_BASE}/doctors/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name, specialization }),
-    });
-
-    if (res.ok) {
-      addDoctorForm.reset();
-      loadAdminDashboard();
-    } else {
-      alert("❌ Failed to add doctor.");
-    }
-  });
-}
 
 // ============================
 // 🩺 Assign Doctor to Patient
